@@ -157,41 +157,18 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-12 text-white">
-      <section className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1fr_480px] lg:items-center">
-        <div>
-          <p className="mb-4 text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
-            Lead Capture
-          </p>
-
-          <h1 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl">
-            Let&apos;s start the conversation.
-          </h1>
-
-          <p className="max-w-xl text-lg leading-8 text-slate-300">
-            Submit your information and our team will review your message. This
-            demo saves the lead to Supabase and forwards it to the required
-            webhook from the server.
-          </p>
-        </div>
-
+    <main className="flex min-h-screen items-center justify-center bg-stone-50 px-5 py-10 text-slate-950 sm:px-6">
+      <section className="w-full max-w-2xl">
         <form
           onSubmit={handleSubmit}
-          className="rounded-3xl border border-white/10 bg-white p-6 text-slate-950 shadow-2xl sm:p-8"
+          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
           noValidate
         >
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold">Contact us</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Fields marked with an asterisk are required.
-            </p>
-          </div>
-
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label
                 htmlFor="firstName"
-                className="mb-2 block text-sm font-medium text-slate-800"
+                className="mb-2 block text-sm font-medium text-slate-700"
               >
                 First name *
               </label>
@@ -201,10 +178,10 @@ export default function Home() {
                 type="text"
                 value={formData.firstName}
                 onChange={handleChange}
-                className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 ${
+                className={`w-full rounded-lg border bg-white px-3.5 py-3 outline-none transition focus:ring-3 ${
                   errors.firstName
-                    ? "border-red-500 focus:ring-red-200"
-                    : "border-slate-300 focus:border-slate-900 focus:ring-slate-200"
+                    ? "border-red-500 focus:ring-red-100"
+                    : "border-slate-300 focus:border-slate-950 focus:ring-slate-100"
                 }`}
               />
               {errors.firstName && (
@@ -215,7 +192,7 @@ export default function Home() {
             <div>
               <label
                 htmlFor="lastName"
-                className="mb-2 block text-sm font-medium text-slate-800"
+                className="mb-2 block text-sm font-medium text-slate-700"
               >
                 Last name *
               </label>
@@ -225,10 +202,10 @@ export default function Home() {
                 type="text"
                 value={formData.lastName}
                 onChange={handleChange}
-                className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 ${
+                className={`w-full rounded-lg border bg-white px-3.5 py-3 outline-none transition focus:ring-3 ${
                   errors.lastName
-                    ? "border-red-500 focus:ring-red-200"
-                    : "border-slate-300 focus:border-slate-900 focus:ring-slate-200"
+                    ? "border-red-500 focus:ring-red-100"
+                    : "border-slate-300 focus:border-slate-950 focus:ring-slate-100"
                 }`}
               />
               {errors.lastName && (
@@ -240,7 +217,7 @@ export default function Home() {
           <div className="mt-5">
             <label
               htmlFor="email"
-              className="mb-2 block text-sm font-medium text-slate-800"
+              className="mb-2 block text-sm font-medium text-slate-700"
             >
               Email *
             </label>
@@ -250,10 +227,10 @@ export default function Home() {
               type="email"
               value={formData.email}
               onChange={handleChange}
-              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 ${
+              className={`w-full rounded-lg border bg-white px-3.5 py-3 outline-none transition focus:ring-3 ${
                 errors.email
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-slate-300 focus:border-slate-900 focus:ring-slate-200"
+                  ? "border-red-500 focus:ring-red-100"
+                  : "border-slate-300 focus:border-slate-950 focus:ring-slate-100"
               }`}
             />
             {errors.email && (
@@ -264,7 +241,7 @@ export default function Home() {
           <div className="mt-5">
             <label
               htmlFor="company"
-              className="mb-2 block text-sm font-medium text-slate-800"
+              className="mb-2 block text-sm font-medium text-slate-700"
             >
               Company
             </label>
@@ -274,14 +251,14 @@ export default function Home() {
               type="text"
               value={formData.company}
               onChange={handleChange}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 outline-none transition focus:border-slate-950 focus:ring-3 focus:ring-slate-100"
             />
           </div>
 
           <div className="mt-5">
             <label
               htmlFor="source"
-              className="mb-2 block text-sm font-medium text-slate-800"
+              className="mb-2 block text-sm font-medium text-slate-700"
             >
               How did you hear about us? *
             </label>
@@ -290,10 +267,10 @@ export default function Home() {
               name="source"
               value={formData.source}
               onChange={handleChange}
-              className={`w-full rounded-xl border px-4 py-3 outline-none transition focus:ring-2 ${
+              className={`w-full rounded-lg border bg-white px-3.5 py-3 outline-none transition focus:ring-3 ${
                 errors.source
-                  ? "border-red-500 focus:ring-red-200"
-                  : "border-slate-300 focus:border-slate-900 focus:ring-slate-200"
+                  ? "border-red-500 focus:ring-red-100"
+                  : "border-slate-300 focus:border-slate-950 focus:ring-slate-100"
               }`}
             >
               <option value="">Select an option</option>
@@ -310,7 +287,7 @@ export default function Home() {
           <div className="mt-5">
             <label
               htmlFor="message"
-              className="mb-2 block text-sm font-medium text-slate-800"
+              className="mb-2 block text-sm font-medium text-slate-700"
             >
               Message
             </label>
@@ -320,13 +297,13 @@ export default function Home() {
               rows={4}
               value={formData.message}
               onChange={handleChange}
-              className="w-full resize-none rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+              className="w-full resize-none rounded-lg border border-slate-300 bg-white px-3.5 py-3 outline-none transition focus:border-slate-950 focus:ring-3 focus:ring-slate-100"
             />
           </div>
 
           {submitMessage && (
             <div
-              className={`mt-5 rounded-xl px-4 py-3 text-sm ${
+              className={`mt-5 rounded-lg px-3.5 py-3 text-sm ${
                 submitStatus === "success"
                   ? "bg-green-50 text-green-700"
                   : "bg-red-50 text-red-700"
@@ -339,7 +316,7 @@ export default function Home() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="mt-6 w-full rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-6 w-full rounded-lg bg-slate-950 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-3 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? "Submitting..." : "Submit"}
           </button>
