@@ -1,3 +1,11 @@
+/**
+ * Server route for lead submission.
+ *
+ * Responsibility: validate and persist incoming lead data, then forward saved payload to a webhook.
+ * Data flow: receives JSON from the client form, normalizes/validates it, inserts into Supabase,
+ * and asynchronously posts the inserted row to the external webhook.
+ * Lifecycle: handles `POST /api/leads` in the Next.js App Router request pipeline.
+ */
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -24,6 +32,7 @@ type ValidationErrors = Partial<
 >;
 
 function normalizeBody(body: unknown): LeadPayload {
+  // Safely coerce unknown request JSON into the expected payload shape.
   const data = (body ?? {}) as Record<string, unknown>;
 
   const firstName = typeof data.firstName === "string" ? data.firstName.trim() : "";
@@ -74,6 +83,7 @@ export async function POST(req: Request) {
     const payload = normalizeBody(body);
     const validationErrors = validatePayload(payload);
 
+    // Validation contract: return field-level errors in a 400 response for client mapping.
     if (Object.keys(validationErrors).length > 0) {
       return NextResponse.json(
         {
@@ -101,6 +111,7 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Supabase insert error:", error);
+      // `23505` is Postgres unique-violation, used here for duplicate email handling.
       const isDuplicateEmail = error.code === "23505";
 
       return NextResponse.json(
@@ -135,6 +146,7 @@ export async function POST(req: Request) {
         });
       }
     } catch (webhookError) {
+      // Webhook is best-effort: lead creation is still treated as success if this step fails.
       console.error("Webhook request failed:", {
         leadId: data.id,
         error: webhookError instanceof Error ? webhookError.message : webhookError,
@@ -151,6 +163,7 @@ export async function POST(req: Request) {
       }
     );
   } catch (error) {
+    // Final catch-all for malformed JSON and unexpected route-level failures.
     console.error("API route error:", error);
 
     return NextResponse.json(

@@ -1,3 +1,11 @@
+/**
+ * Client-side lead capture page.
+ *
+ * Responsibility: render and manage the lead form UX.
+ * Data flow: collects input, validates locally, posts normalized payload to `POST /api/leads`,
+ * then renders success/error feedback returned by the API.
+ * Lifecycle: this is a client component in the App Router render tree.
+ */
 "use client";
 
 import { useState } from "react";
@@ -27,6 +35,7 @@ const initialFormData: LeadFormData = {
 };
 
 export default function Home() {
+  // State is split by concern so each UI state transition can be updated independently.
   const [formData, setFormData] = useState<LeadFormData>(initialFormData);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,6 +45,7 @@ export default function Home() {
   const [submitMessage, setSubmitMessage] = useState("");
 
   function validateForm() {
+    // Build a keyed error map so each field can render its own validation message.
     const nextErrors: FormErrors = {};
 
     if (!formData.firstName.trim()) {
@@ -74,6 +84,7 @@ export default function Home() {
       [name]: value,
     }));
 
+    // Clear only the edited field error to keep remaining validation feedback visible.
     setErrors((current) => ({
       ...current,
       [name]: "",
@@ -86,6 +97,7 @@ export default function Home() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    // Phase 1: client-side gate to prevent avoidable API calls.
     if (!validateForm()) {
       return;
     }
@@ -101,6 +113,7 @@ export default function Home() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          // Trim and normalize optional fields to `null` so the API receives clean payloads.
           firstName: formData.firstName.trim(),
           lastName: formData.lastName.trim(),
           email: formData.email.trim(),
@@ -114,6 +127,7 @@ export default function Home() {
 
       if (!response.ok) {
         if (response.status === 400 && result.fieldErrors) {
+          // Reconcile server-side field validation with the local error map.
           setErrors((current) => ({
             ...current,
             ...result.fieldErrors,
@@ -124,11 +138,13 @@ export default function Home() {
         throw new Error(result.error || "Something went wrong.");
       }
 
+      // Phase 2 success path: clear form and show confirmation feedback.
       setSubmitStatus("success");
       setSubmitMessage("Thanks! Your information has been submitted.");
       setFormData(initialFormData);
       setErrors({});
     } catch (error) {
+      // Phase 3 failure path: preserve form input and surface a human-readable message.
       setSubmitStatus("error");
       setSubmitMessage(
         error instanceof Error

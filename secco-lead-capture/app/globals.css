@@ -1,1 +1,8 @@
+/*
+ * Global stylesheet entrypoint.
+ *
+ * Responsibility: load Tailwind's generated base/components/utilities for the entire app.
+ * Data flow: imported by `app/layout.tsx`, then applied to all routed pages.
+ * Lifecycle: included once at the root layout level during app render.
+ */
 @import "tailwindcss";
