@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 
 type LeadFormData = {
   firstName: string;
@@ -12,6 +12,10 @@ type LeadFormData = {
 };
 
 type FormErrors = Partial<Record<keyof LeadFormData, string>>;
+type SubmitResponse = {
+  error?: string;
+  fieldErrors?: FormErrors;
+};
 
 const initialFormData: LeadFormData = {
   firstName: "",
@@ -79,7 +83,7 @@ export default function Home() {
     setSubmitMessage("");
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!validateForm()) {
@@ -106,9 +110,17 @@ export default function Home() {
         }),
       });
 
-      const result = await response.json();
+      const result = (await response.json()) as SubmitResponse;
 
       if (!response.ok) {
+        if (response.status === 400 && result.fieldErrors) {
+          setErrors((current) => ({
+            ...current,
+            ...result.fieldErrors,
+          }));
+          return;
+        }
+
         throw new Error(result.error || "Something went wrong.");
       }
 
