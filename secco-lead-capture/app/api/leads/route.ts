@@ -1,9 +1,9 @@
 /**
  * Server route for lead submission.
  *
- * Responsibility: validate and persist incoming lead data, then forward saved payload to a webhook.
- * Data flow: receives JSON from the client form, normalizes/validates it, inserts into Supabase,
- * and asynchronously posts the inserted row to the external webhook.
+ * Responsibility: normalize, validate, and persist incoming lead data, then forward saved payload to a webhook.
+ * Data flow: receives JSON from the client form, trims and validates required fields, field lengths,
+ * email format, and allowed source values, inserts into Supabase, then posts the inserted row to the webhook.
  * Lifecycle: handles `POST /api/leads` in the Next.js App Router request pipeline.
  */
 import { NextResponse } from "next/server";
@@ -17,6 +17,14 @@ const supabase = createClient(
 const WEBHOOK_URL =
   "https://webhook-receiver-flax.vercel.app/api/lead-webhook";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ALLOWED_SOURCES = new Set(["Google", "Referral", "Social", "Other"]);
+const FIELD_LIMITS = {
+  firstName: 100,
+  lastName: 100,
+  email: 254,
+  company: 150,
+  message: 2000,
+} as const;
 
 type LeadPayload = {
   firstName: string;
@@ -28,11 +36,11 @@ type LeadPayload = {
 };
 
 type ValidationErrors = Partial<
-  Record<"firstName" | "lastName" | "email" | "source", string>
+  Record<"firstName" | "lastName" | "email" | "company" | "source" | "message", string>
 >;
 
 function normalizeBody(body: unknown): LeadPayload {
-  // Safely coerce unknown request JSON into the expected payload shape.
+  // Safely coerce unknown request JSON into trimmed strings/nulls before validation.
   const data = (body ?? {}) as Record<string, unknown>;
 
   const firstName = typeof data.firstName === "string" ? data.firstName.trim() : "";
@@ -54,24 +62,41 @@ function normalizeBody(body: unknown): LeadPayload {
 }
 
 function validatePayload(payload: LeadPayload): ValidationErrors {
+  // Keep validation server-side authoritative even if the client is bypassed.
   const errors: ValidationErrors = {};
 
   if (!payload.firstName) {
     errors.firstName = "First name is required.";
+  } else if (payload.firstName.length > FIELD_LIMITS.firstName) {
+    errors.firstName = `First name must be ${FIELD_LIMITS.firstName} characters or fewer.`;
   }
 
   if (!payload.lastName) {
     errors.lastName = "Last name is required.";
+  } else if (payload.lastName.length > FIELD_LIMITS.lastName) {
+    errors.lastName = `Last name must be ${FIELD_LIMITS.lastName} characters or fewer.`;
   }
 
   if (!payload.email) {
     errors.email = "Email is required.";
   } else if (!EMAIL_REGEX.test(payload.email)) {
     errors.email = "Please enter a valid email address.";
+  } else if (payload.email.length > FIELD_LIMITS.email) {
+    errors.email = `Email must be ${FIELD_LIMITS.email} characters or fewer.`;
+  }
+
+  if (payload.company && payload.company.length > FIELD_LIMITS.company) {
+    errors.company = `Company must be ${FIELD_LIMITS.company} characters or fewer.`;
   }
 
   if (!payload.source) {
     errors.source = "Please select an option.";
+  } else if (!ALLOWED_SOURCES.has(payload.source)) {
+    errors.source = "Please select a valid option.";
+  }
+
+  if (payload.message && payload.message.length > FIELD_LIMITS.message) {
+    errors.message = `Message must be ${FIELD_LIMITS.message} characters or fewer.`;
   }
 
   return errors;

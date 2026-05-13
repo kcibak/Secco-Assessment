@@ -1,75 +1,155 @@
-# Secco-Assessment
+# Secco Lead Capture — Junior Web Developer Assessment
 
-/
-Lead capture form
+A minimal lead capture application built with **Next.js App Router**, **TypeScript**, **Supabase**, and **Tailwind CSS**.
 
-/leads
-Server-rendered leads table
+Visitors can submit their information through a public form, leads are saved to Supabase, and each successful submission is forwarded server-side to the provided webhook endpoint. An internal `/leads` page lists all submitted leads in a simple table.
 
-/api/leads
-POST endpoint:
-1. validate request server-side
-2. insert into Supabase
-3. call webhook server-side
-4. log webhook failure if it fails
-5. return success if DB insert worked
+**Live demo:** [secco-assessment.vercel.app](https://secco-assessment.vercel.app)  
+**GitHub repo:** [github.com/kcibak/Secco-Assessment](https://github.com/kcibak/Secco-Assessment)
 
-i ran npx create-next-app@latest secco-lead-capture --typescript --tailwind --eslint --app to getv the template
+---
 
+## Pages & API
 
-used github copilot, chatgpt, codex, and coderabbit to work on this project
+| Route | Description |
+|---|---|
+| `/` | Public lead capture form |
+| `/leads` | Server-rendered table of all submitted leads, sorted by most recent |
+| `/api/leads` | POST endpoint that validates submissions, saves leads to Supabase, and forwards them to the webhook |
 
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Features
 
-## Getting Started
+- Public lead capture form with required and optional fields
+- Client-side validation with clear inline error states
+- Server-side validation before database insert
+- Server-side allowed source validation and field length limits
+- Supabase persistence using a protected server-side client
+- Server-side webhook forwarding after a successful Supabase insert
+- Graceful webhook failure handling
+- Duplicate email handling
+- Loading and success states
+- Internal leads table sorted by newest submission first
+- Supabase RLS enabled with insert-only access for anonymous users; reads require server-side access
 
-First, run the development server:
+
+## How it works
+
+1. A visitor submits the lead form on `/`.
+2. Client-side validation checks required fields and email format.
+3. The form sends a `POST` request to `/api/leads`.
+4. The API route validates the payload again server-side.
+5. The lead is inserted into Supabase using the service role key.
+6. After the database insert succeeds, the lead is POSTed server-side to the provided webhook endpoint.
+7. The webhook request includes the required `X-Candidate-Name` header.
+8. If the webhook fails, the error is logged, but the user still sees a successful submission because the primary action already succeeded.
+9. The `/leads` page fetches submitted leads server-side and renders them in a table.
+
+---
+
+## Webhook confirmation
+
+This app POSTs each successfully saved lead to the provided webhook endpoint server-side, after the Supabase insert succeeds.
+
+The webhook request includes:
+
+```http
+X-Candidate-Name: Kira Cibak
+```
+
+Webhook endpoint: https://webhook-receiver-flax.vercel.app/api/lead-webhook
+
+If the webhook request fails, the error is logged on the server, but the user still receives a success confirmation.
+
+---
+
+## Supabase RLS
+
+Supabase Row Level Security is enabled for the `leads` table.
+
+Anonymous clients cannot read leads directly from the browser. The RLS policy allows anonymous inserts, while reads are handled through server-side code using `SUPABASE_SERVICE_ROLE_KEY`, which bypasses RLS only on the server.
+
+See `init.sql` for the table definition and RLS policy setup.
+
+---
+
+## Running locally
+
+```bash
+git clone https://github.com/kcibak/Secco-Assessment.git
+cd Secco-Assessment
+cd secco-lead-capture
+npm install
+npm run dev
+```
+
+Create a `.env.local` in the root with the following — all values are found in your Supabase project under **Settings → API**:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+```
+
+Then run the SQL in `init.sql` against your Supabase project via the SQL Editor to create the `leads` table and apply RLS policies.
+
+### 3. Set up the database
+
+Run the SQL from `init.sql` in the Supabase SQL Editor. This creates the `leads` table and applies the required RLS setup.
+
+### 4. Start the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tech stack
 
-## Learn More
+- **Next.js 14** (App Router)
+- **TypeScript**
+- **Tailwind CSS**
+- **Supabase** — Postgres database and RLS
+- **Vercel** — deployment
 
-To learn more about Next.js, take a look at the following resources:
+Bootstrapped with:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npx create-next-app@latest secco-lead-capture --typescript --tailwind --eslint --app
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Deployment notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The app is deployed on Vercel. Environment variables are configured in the Vercel project dashboard under **Settings → Environment Variables**.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+An early build issue occurred due to output directory configuration, resolved by adding a `vercel.json` file and correcting the deployment settings.
 
-first i ran the template command and created my vercel/supabase account (this was my first exposure to thesse tools!) 
-then i generated a minimal frontend and worked to create the route and tested the backednd, along with integrating the rls stuff. init.sql shows the queries i ran in supabase to setup the db. build to vercel was failing at first bc of : Build Failed No Output Directory named "public" found after the Build completed. Configure the Output Directory in your Project Settings. Alternatively, configure vercel.json#outputDirectory.
+---
 
+## AI tools used
 
-...so i fixed that by adding vercel.json and making sure the deployment settings were correct. and i tested if it hit the backend on the live link and its working. 
+AI tools were used to support development, debugging, and review:
 
-next i polished up the frontend, cleaned up whatever was unused in the codebase from the og template. and i properly documented and qc'd the code.
+- ChatGPT
+- GitHub Copilot
+- Codex
+- CodeRabbit
 
+All generated code and suggestions were reviewed and adjusted manually before submission.
 
-some things i could improve are definitely the ui design, and mobile design bc that wasn't on my mind when developing this. also could implement input sanitization and more security measures to make it more robust to those type of vulnerabilities. it might also benefit to implmeent session tokens so we could better track duplicate submissions and give a better user experience. i was aiming to make something minimal that worked as intended.
+---
 
+## What I'd improve with more time
 
-the env vars i used were from supabase
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY
+- **Responsive polish** — the core layout works, but I would spend more time refining spacing, sizing, and mobile states
+- **Input normalization** — trim whitespace and normalize casing where appropriate
+- **Duplicate handling UX** — duplicate emails are handled, but the user-facing message could be more polished
+- **Webhook retry logic** — failed webhook requests are logged, but a retry queue or exponential backoff would make the side effect more reliable
+- **Test coverage** — integration tests around `/api/leads`, duplicate submissions, validation errors, and the webhook failure path
+
+This implementation was intentionally kept minimal and focused on correctness: a working submission flow, protected database access, server-side webhook forwarding, and a clear review path.

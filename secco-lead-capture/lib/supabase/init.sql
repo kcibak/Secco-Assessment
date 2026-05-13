@@ -21,5 +21,11 @@ alter table public.leads enable row level security;
 
 grant usage on schema public to anon, authenticated, service_role;
 
-grant all privileges on table public.leads
+grant insert on table public.leads
+to anon, authenticated;
+
+grant select on table public.leads
+to service_role;
+
+grant usage, select on sequence public.leads_id_seq
 to anon, authenticated, service_role;
